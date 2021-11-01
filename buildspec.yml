@@ -1,0 +1,13 @@
+version: 0.2
+
+phases:
+  install:
+    runtime-versions:
+      nodejs: 10
+    commands:
+      - mkdir -p ~/.ssh; echo "${ID_RSA}" > ~/.ssh/id_rsa; chmod 600 ~/.ssh/id_rsa
+      - yarn install
+  build:
+    commands:
+      - yarn lint
+      - yarn test

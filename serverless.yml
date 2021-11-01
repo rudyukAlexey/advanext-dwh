@@ -1,0 +1,117 @@
+service: advanext-dwh
+
+package:
+  include:
+    - build/**
+  exclude:
+    - infrastructure/**
+    - .terragrunt-cache/**
+    - '**/*.ts'
+
+provider:
+  name: aws
+  runtime: nodejs10.x
+  region: ${self:custom.region}
+  stage: ${opt:stage, self:custom.defaultStage}
+  stackTags:
+    ENVIRONMENT: ${self:provider.stage}
+    PROJECT: ${self:service}-${self:provider.stage}
+  tracing:
+    lambda: true
+  apiKeys:
+    - ${self:service}-${self:provider.stage}
+  deploymentBucket:
+    name: ${self:service}-${self:provider.stage}-${self:provider.region}-deployment-bucket
+  environment:
+    STAGE: ${self:provider.stage}
+    SERVICE_NAME: ${self:service}
+    LOGGER_NAME: ${self:service}-${self:provider.stage}
+    SSM_PARAMETERS_ROOT_PATH: ${self:custom.ssmParameters.rootPath}
+  timeout: 10
+  logRetentionInDays: 30
+  iamRoleStatements:
+    - Effect: Allow
+      Action:
+        - ssm:GetParameter
+        - ssm:GetParameters
+      Resource:
+        - arn:aws:ssm:${self:provider.region}:#{AWS::AccountId}:parameter/${self:provider.stage}/${self:service}/REDSHIFT_USERNAME
+        - arn:aws:ssm:${self:provider.region}:#{AWS::AccountId}:parameter/${self:provider.stage}/${self:service}/REDSHIFT_PASSWORD
+        - arn:aws:ssm:${self:provider.region}:#{AWS::AccountId}:parameter/${self:provider.stage}/${self:service}/REDSHIFT_HOST
+        - arn:aws:ssm:${self:provider.region}:#{AWS::AccountId}:parameter/${self:provider.stage}/${self:service}/REDSHIFT_DATABASE
+
+plugins:
+  - serverless-prune-plugin
+  - serverless-deployment-bucket
+  - serverless-pseudo-parameters
+  - serverless-log-forwarding
+
+custom:
+  prune:
+    automatic: true
+    number: 5
+  defaultStage: dev
+  region: eu-central-1
+  ssmParameters:
+    rootPath: ${self:provider.stage}/${self:service}
+  stages:
+    dev:
+      DOMAIN_PREFIX: dev-api
+    staging:
+      DOMAIN_PREFIX: staging-api
+    prod:
+      DOMAIN_PREFIX: api
+  logForwarding:
+    destinationARN: ${cf:aws-monitoring-utils-${self:provider.stage}.LoggingLambdaArn}
+
+functions:
+  streams_onStreamEvent:
+    handler: build/events/streams.onStreamEvent
+    timeout: 60
+    vpc:
+      subnetIds: # DEV
+        - subnet-0b0aa8b94857ee4af
+        - subnet-027efcffbdba8b221
+        - subnet-091c9b0e5c61034d7
+      securityGroupIds:
+        - sg-04b71038b528e1a5b
+    #  subnetIds: # PROD
+    #    - subnet-09b80d7b7db679a56
+    #    - subnet-054730ed4d18d0cf2
+    #    - subnet-060db3cd8ab027902
+    #  securityGroupIds:
+    #    - sg-0c3810507b206fc24
+    events:
+      - stream:
+          type: dynamodb
+          arn: ${cf:loans-${self:provider.stage}.LoansDynamoDBTableStreamArn}
+      - stream:
+          type: dynamodb
+          arn: ${cf:advanext-users-${self:provider.stage}.UsersDynamoDBTableStreamArn}
+#      - stream:
+#          type: dynamodb
+#          arn: ${cf:payments-${self:provider.stage}.ActualTransactionsDynamoDBTableStreamArn}
+#      - stream:
+#          type: dynamodb
+#          arn: ${cf:payments-${self:provider.stage}.ShouldTransactionsDynamoDBTableStreamArn}
+      - stream:
+          type: dynamodb
+          arn: ${cf:tasks-${self:provider.stage}.TasksDynamoDBTableStreamArn}
+      - stream:
+          type: dynamodb
+          arn: ${cf:credit-arrangements-${self:provider.stage}.CreditArrangementsDynamoDBTableStreamArn}
+      - stream:
+          type: dynamodb
+          arn: ${cf:bank-accounts-${self:provider.stage}.BankAccountsDynamoDBTableStreamArn}
+#      - stream:
+#          type: dynamodb
+#          arn: ${cf:credit-arrangements-${self:provider.stage}.CreditArrangementsDynamoDBTableStreamArn}
+      - stream:
+          type: dynamodb
+          arn: ${cf:documents-${self:provider.stage}.DocumentsDynamoDbTableStreamArn}
+      - stream:
+          type: dynamodb
+          arn: ${cf:companies-${self:provider.stage}.CompaniesDynamoDBTableStreamArn}
+      - stream:
+          type: dynamodb
+          arn: ${cf:contracts-${self:provider.stage}.ContractsDynamoDBTableStreamArn}

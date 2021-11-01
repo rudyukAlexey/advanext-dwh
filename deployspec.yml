@@ -1,0 +1,15 @@
+version: 0.2
+
+phases:
+  install:
+    runtime-versions:
+      nodejs: 10
+    commands:
+      # Preparations
+      - mkdir -p ~/.ssh; echo "${ID_RSA}" > ~/.ssh/id_rsa; chmod 600 ~/.ssh/id_rsa
+      # Install deps
+      - yarn install
+  build:
+    commands:
+      # Deploy to stage
+      - yarn deploy --stage ${STAGE}

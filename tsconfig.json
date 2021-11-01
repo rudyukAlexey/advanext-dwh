@@ -1,0 +1,24 @@
+{
+   "compilerOptions": {
+      "target": "es2019",
+      "outDir": "build",
+      "module": "commonjs",
+      "lib": ["es2019", "es2020.bigint", "es2020.string", "es2020.symbol.wellknown"],
+      "pretty": true,
+      "inlineSourceMap": true,
+      "forceConsistentCasingInFileNames": true,
+      "noImplicitReturns": true,
+      "noImplicitThis": true,
+      "noImplicitAny": false,
+      "strictNullChecks": true,
+      "suppressImplicitAnyIndexErrors": true,
+      "experimentalDecorators": true,
+      "emitDecoratorMetadata": true,
+      "esModuleInterop": true,
+      "baseUrl": "./",
+      "paths": {
+         "*": ["./src/*"]
+      }
+   },
+   "exclude": ["node_modules", "test", "scripts"]
+}

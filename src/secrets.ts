@@ -1,0 +1,15 @@
+const { STAGE, SERVICE_NAME } = process.env;
+
+export const REDSHIFT_USERNAME = 'REDSHIFT_USERNAME';
+export const REDSHIFT_PASSWORD = 'REDSHIFT_PASSWORD';
+export const REDSHIFT_HOST = 'REDSHIFT_HOST';
+export const REDSHIFT_DATABASE = 'REDSHIFT_DATABASE';
+
+export const secret = (name: string): string => process.env[name] as string;
+
+export default new Map([
+  [REDSHIFT_USERNAME, `/${STAGE}/${SERVICE_NAME}/REDSHIFT_USERNAME`],
+  [REDSHIFT_PASSWORD, `/${STAGE}/${SERVICE_NAME}/REDSHIFT_PASSWORD`],
+  [REDSHIFT_HOST, `/${STAGE}/${SERVICE_NAME}/REDSHIFT_HOST`],
+  [REDSHIFT_DATABASE, `/${STAGE}/${SERVICE_NAME}/REDSHIFT_DATABASE`],
+])
